@@ -47,17 +47,6 @@ RailsCamera initRailsCamera(Camera3D camera) {
   return r_camera;
 };
 
-void drawMyCube(Camera3D camera) {
-  ClearBackground(WHITE);
-
-  BeginMode3D(camera);
-
-  DrawCube((Vector3){0.0f, 0.0f, 0.0f}, 2.0f, 2.0f, 2.0f, MAROON);
-  DrawCube((Vector3){5.0f, 2.0f, 0.0f}, 2.0f, 1.0f, 1.0f, BLUE);
-
-  EndMode3D();
-}
-
 void lookDirection(RailsCamera r, Vector3 *v) {
   v->x = cosf(r.pitch) * cosf(r.yaw);
   v->y = sinf(r.pitch);
@@ -72,16 +61,57 @@ void toggleCursor() {
     EnableCursor();
 }
 
+void drawAxis() {
+  // Optional: Add some grid lines on the ground
+  for (int i = -10; i <= 10; i++) {
+    DrawLine3D((Vector3){i, 0, -10}, (Vector3){i, 0, 10}, LIGHTGRAY);
+    DrawLine3D((Vector3){-10, 0, i}, (Vector3){10, 0, i}, LIGHTGRAY);
+  }
+
+  static const int l = 100;
+  // X-axis (Red)
+  DrawLine3D((Vector3){-l, 0, 0}, (Vector3){l, 0, 0}, RED);
+  // Y-axis (Green)
+  DrawLine3D((Vector3){0, -l, 0}, (Vector3){0, l, 0}, GREEN);
+  // Z-axis (Blue)
+  DrawLine3D((Vector3){0, 0, -l}, (Vector3){0, 0, l}, BLUE);
+}
+
+void drawMyCube() {
+  DrawCube((Vector3){0.0f, 1.0f, 0.0f}, 2.0f, 2.0f, 2.0f, MAROON);
+  DrawCube((Vector3){5.0f, 2.0f, 0.0f}, 2.0f, 1.0f, 1.0f, BLUE);
+}
+
+void draw3D(Camera3D c) {
+
+  ClearBackground(WHITE);
+
+  BeginMode3D(c);
+  drawAxis();
+  drawMyCube();
+
+  EndMode3D();
+}
+
 // DEBUG
 
-void debugCursorPosition(char (*buffer)[128], Vector2 position) {
+void debugCursorPosition(char (*buffer)[128], Vector2 pos) {
   const Vector2 mouse = GetMousePosition();
   snprintf(*buffer, sizeof(*buffer), "x: %.0f, y: %.0f", mouse.x, mouse.y);
-  DrawText(*buffer, position.x, position.y, 22, BLACK);
+  DrawText(*buffer, pos.x, pos.y, 22, BLACK);
 }
-void debugPathInfo(char (*buffer)[128], Vector2 position) {
+void debugPathInfo(char (*buffer)[128], Vector2 pos) {
   snprintf(*buffer, sizeof(*buffer), "path_time: %.3f", rails_camera.path_time);
-  DrawText(*buffer, position.x, position.y, 22, BLACK);
+  DrawText(*buffer, pos.x, pos.y, 22, BLACK);
+}
+void debugCameraInfo(char (*buffer)[128], RailsCamera *c, Vector2 pos) {
+  snprintf(*buffer, sizeof(*buffer), "x: %.3f, y: %.3f, z: %.3f",
+           c->camera.position.x, c->camera.position.y, c->camera.position.z);
+  DrawText(*buffer, pos.x, pos.y, 22, BLACK);
+
+  snprintf(*buffer, sizeof(*buffer), "yaw: %.3f, pitch: %.3f, speed: %.3f",
+           c->yaw, c->pitch, c->speed);
+  DrawText(*buffer, pos.x, pos.y + 20, 22, BLACK);
 }
 void debugCursorLines() {
   const Vector2 mouse = GetMousePosition();
@@ -91,8 +121,9 @@ void debugCursorLines() {
 
 void debugInfo() {
   char buffer[128];
-  debugCursorPosition(&buffer, (Vector2){.x = 10, .y = 10});
-  debugPathInfo(&buffer, (Vector2){.x = 10, .y = 30});
+  // debugCursorPosition(&buffer, (Vector2){.x = 10, .y = 10});
+  debugPathInfo(&buffer, (Vector2){.x = 10, .y = 10});
+  debugCameraInfo(&buffer, &rails_camera, (Vector2){.x = 10, .y = 30});
   // debugCursorLines();
 }
 
@@ -138,8 +169,7 @@ void updateFrame() {
   BeginDrawing();
   ClearBackground(RAYWHITE);
 
-  // 3D cube
-  drawMyCube(rails_camera.camera);
+  draw3D(rails_camera.camera);
 
   debugInfo();
 
