@@ -1,0 +1,6 @@
+-IC:../raylib/src
+-LC:raylib/lib
+-lraylib
+-lopengl32
+-lgdi32
+-lwinmm
